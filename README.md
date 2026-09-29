@@ -1,23 +1,46 @@
-# $NEO — Planetary Defense Fund v2
+# $NEO — Planetary Defense Fund
 
-## Run locally (full version)
-The site now has a tiny Node server because two things need a backend: the JPL proxy and persistent admin updates.
+Vercel-ready static frontend + serverless API routes.
 
-```bash
-cd neo-site
-ADMIN_KEY="choose-a-long-private-password" npm start
-```
-Open http://localhost:8080
-Admin: http://localhost:8080/admin.html
+## Vercel deployment
 
-Do **not** share the ADMIN_KEY. It is checked server-side and is never shipped in the frontend.
+Import this repository as a **new** Vercel project.
 
-## What changed
-- `/api/neo` proxies NASA/JPL close-approach data, so the telemetry works despite browser CORS restrictions.
-- `/admin.html` updates contract address, trading URL, fee split, fund goal, and contribution ledger without editing/redeploying the site.
-- Published admin data is stored in `data/site.json`.
-- Multi-layer procedural asteroids now cross the background at varied sizes, depths, directions, rotations, and speeds.
-- Removed the hero “PLANETARY DEFENSE NETWORK // ONLINE” line.
+Use these settings during import:
 
-## Deployment note
-The host must run Node and keep `data/site.json` on persistent storage. If the platform uses an ephemeral filesystem, mount a persistent volume for `/data` or swap the config storage for a database. Set `ADMIN_KEY` as a secret environment variable on the host.
+- Framework Preset: **Other**
+- Root Directory: **./**
+- Build Command: **None / empty**
+- Output Directory: **None / empty**
+- Install Command: **None / empty**
+
+The repository also sets `"framework": null` in `vercel.json` so Vercel does not classify the browser-side `app.js` as a Node application.
+
+### Environment variables
+
+Set:
+
+- `ADMIN_KEY` — a long private password used by `/admin.html`
+
+For persistent admin data, connect an Upstash Redis database and expose either:
+
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+
+or Vercel KV-compatible names:
+
+- `KV_REST_API_URL`
+- `KV_REST_API_TOKEN`
+
+Without Redis, the public site still loads with default config, but admin saves will return a storage-not-configured error.
+
+## Routes
+
+- `/` — static website
+- `/admin.html` — admin UI
+- `/api/neo` — NASA/JPL close-approach proxy
+- `/api/config` — persistent public/admin configuration
+
+## Architecture
+
+`index.html`, `styles.css`, and `app.js` are browser/static assets. Only files inside `api/` are Vercel Functions. Do not change the Vercel Framework Preset to Node.
